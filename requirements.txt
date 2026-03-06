@@ -1,0 +1,15 @@
+
+# 巨潮资讯公告下载器依赖包
+
+# Web框架
+streamlit&gt;=1.28.0
+
+# 数据处理
+pandas&gt;=2.0.0
+
+# HTTP请求
+requests&gt;=2.31.0
+
+# Brotli压缩解压
+brotli&gt;=1.0.0
+
