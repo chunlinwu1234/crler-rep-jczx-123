@@ -1,0 +1,175 @@
+{
+  "资产负债表": {
+    "total_fields": 158,
+    "strategic_essential": [
+      "ts_code",
+      "end_date",
+      "ann_date",
+      "total_assets",
+      "total_liab",
+      "total_hldr_eqy_exc_min_int",
+      "total_cur_assets",
+      "total_nca",
+      "total_cur_liab",
+      "total_ncl",
+      "money_cap",
+      "trad_asset",
+      "notes_receiv",
+      "accounts_receiv",
+      "inventories",
+      "goodwill",
+      "intan_assets",
+      "r_and_d",
+      "fix_assets",
+      "cip",
+      "const_materials",
+      "notes_payable",
+      "acct_payable",
+      "adv_receipts"
+    ],
+    "competitive_intel": [
+      "oth_cur_assets",
+      "oth_cur_liab",
+      "defer_tax_assets",
+      "defer_tax_liab",
+      "total_hldr_eqy_inc_min_int",
+      "minority_int"
+    ],
+    "strategic_essential_count": 24,
+    "competitive_intel_count": 6
+  },
+  "利润表": {
+    "total_fields": 94,
+    "strategic_essential": [
+      "ts_code",
+      "end_date",
+      "ann_date",
+      "total_revenue",
+      "revenue",
+      "total_cogs",
+      "oper_cost",
+      "operate_profit",
+      "income_tax",
+      "n_income",
+      "n_income_attr_p",
+      "sell_exp",
+      "admin_exp",
+      "fin_exp",
+      "rd_exp",
+      "int_income",
+      "comm_income"
+    ],
+    "competitive_intel": [
+      "prem_income",
+      "comm_exp",
+      "prem_refund",
+      "undist_profit",
+      "distable_profit"
+    ],
+    "strategic_essential_count": 17,
+    "competitive_intel_count": 5
+  },
+  "现金流量表": {
+    "total_fields": 97,
+    "strategic_essential": [
+      "ts_code",
+      "end_date",
+      "ann_date",
+      "n_cashflow_act",
+      "n_cashflow_inv_act",
+      "n_cash_flows_fnc_act",
+      "im_net_cashflow_oper_act"
+    ],
+    "competitive_intel": [
+      "c_paid_to_for_empl",
+      "c_paid_for_taxes"
+    ],
+    "strategic_essential_count": 7,
+    "competitive_intel_count": 2
+  },
+  "主营业务构成": {
+    "total_fields": 8,
+    "strategic_essential": [
+      "ts_code",
+      "end_date",
+      "bz_item",
+      "bz_sales",
+      "bz_profit"
+    ],
+    "competitive_intel": [],
+    "strategic_essential_count": 5,
+    "competitive_intel_count": 0
+  },
+  "业绩快报": {
+    "total_fields": 32,
+    "strategic_essential": [
+      "ts_code",
+      "end_date",
+      "ann_date",
+      "revenue",
+      "operate_profit",
+      "total_profit",
+      "n_income",
+      "diluted_eps",
+      "total_assets",
+      "total_hldr_eqy_exc_min_int"
+    ],
+    "competitive_intel": [],
+    "strategic_essential_count": 10,
+    "competitive_intel_count": 0
+  },
+  "财务指标": {
+    "total_fields": 167,
+    "strategic_essential": [
+      "ts_code",
+      "end_date",
+      "ann_date",
+      "eps",
+      "dt_eps",
+      "total_revenue_ps",
+      "revenue_ps",
+      "capital_rese_ps",
+      "profit_dedt",
+      "grossprofit_margin",
+      "netprofit_margin",
+      "roe",
+      "roe_waa",
+      "roe_dt",
+      "roa",
+      "debt_to_assets",
+      "debt_to_eqt",
+      "current_ratio",
+      "quick_ratio",
+      "turn_days",
+      "inv_turn",
+      "ar_turn",
+      "ca_turn",
+      "fa_turn",
+      "ocfps",
+      "cfps",
+      "profit_to_op",
+      "q_sales_yoy",
+      "q_op_yoy",
+      "q_profit_yoy"
+    ],
+    "competitive_intel": [
+      "basic_eps_yoy",
+      "dt_eps_yoy",
+      "cfps_yoy",
+      "op_yoy",
+      "ebt_yoy",
+      "netprofit_yoy",
+      "tr_yoy",
+      "or_yoy",
+      "assets_yoy",
+      "q_gsprofit_margin",
+      "q_profit_to_gr",
+      "q_saleexp_to_gr",
+      "q_adminexp_to_gr",
+      "roe_yearly",
+      "op_yoy"
+    ],
+    "strategic_essential_count": 30,
+    "competitive_intel_count": 15
+  }
+}

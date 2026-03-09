@@ -141,9 +141,19 @@ class StockDownloader:
         # 先在本地映射中查找
         query = query.strip()
         if query in self.stock_map:
-            return self.stock_map[query]
+            stock_info = self.stock_map[query]
+            # 如果名称和代码相同（未正确获取名称），尝试重新获取
+            if stock_info.name == stock_info.code and len(query) == 6 and query.isdigit():
+                try:
+                    fetched_name = self._fetch_stock_info_from_api(query)
+                    if fetched_name and fetched_name != query:
+                        stock_info.name = fetched_name
+                        self._save_stock_map()
+                except Exception as e:
+                    print(f"更新股票名称失败: {e}")
+            return stock_info
         
-        # 预定义的股票映射（基于示例文件）
+        # 预定义的股票映射（常用股票）
         predefined_stocks = {
             "000739": {"name": "普洛药业", "org_id": "gssz0000739", "plate": "szse"},
             "普洛药业": {"name": "普洛药业", "org_id": "gssz0000739", "plate": "szse"},
@@ -177,44 +187,232 @@ class StockDownloader:
             
             return stock_info
         
-        # 如果是6位代码，尝试根据规则构建
-        if len(query) == 6:
-            # 判断板块
-            if query.startswith(("000", "001", "002", "003", "300")):
+        # 如果是6位代码，支持所有A股股票
+        if len(query) == 6 and query.isdigit():
+            # 尝试从巨潮资讯网获取完整股票信息（包括正确的org_id）
+            try:
+                stock_data = self._fetch_stock_info_from_api(query)
+                if stock_data:
+                    stock_info = StockInfo(
+                        code=stock_data['code'],
+                        name=stock_data['name'],
+                        org_id=stock_data['org_id'],
+                        plate=stock_data['plate']
+                    )
+                    # 保存到本地映射
+                    self.stock_map[query] = stock_info
+                    self.stock_map[stock_data['name']] = stock_info
+                    self._save_stock_map()
+                    return stock_info
+            except Exception as e:
+                print(f"从API获取股票信息失败: {e}")
+            
+            # 如果API获取失败，使用默认规则构建
+            # 判断板块和构建org_id
+            if query.startswith(("000", "001", "002", "003", "300", "301")):
                 plate = "szse"
                 org_id = f"gssz000{query}"
-            else:
+            elif query.startswith(("600", "601", "603", "605", "688")):
                 plate = "sse"
                 org_id = f"gssh0{query}"
+            else:
+                plate = "szse"
+                org_id = f"gssz000{query}"
             
             stock_info = StockInfo(query, query, org_id, plate)
             self.stock_map[query] = stock_info
             self._save_stock_map()
-            
             return stock_info
+        
+        # 如果不是6位代码，尝试通过名称搜索
+        if len(query) >= 2 and not query.isdigit():
+            try:
+                stock_data = self._search_stock_by_name(query)
+                if stock_data:
+                    stock_info = StockInfo(
+                        code=stock_data['code'],
+                        name=stock_data['name'],
+                        org_id=stock_data['org_id'],
+                        plate=stock_data['plate']
+                    )
+                    # 保存到本地映射
+                    self.stock_map[stock_info.code] = stock_info
+                    self.stock_map[stock_info.name] = stock_info
+                    self._save_stock_map()
+                    return stock_info
+            except Exception as e:
+                print(f"通过名称搜索股票失败: {e}")
         
         return None
     
-    def get_announcements(self, stock_info, 
+    def _fetch_stock_info_from_api(self, keyword):
+        """
+        从巨潮资讯网搜索股票信息
+        
+        Args:
+            keyword: 搜索关键词（股票代码或名称）
+            
+        Returns:
+            股票信息字典，获取失败返回None
+        """
+        try:
+            url = "http://www.cninfo.com.cn/new/information/topSearch/query"
+            
+            headers = {
+                'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
+                'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8',
+                'X-Requested-With': 'XMLHttpRequest'
+            }
+            
+            data = {
+                'keyWord': keyword,
+                'maxNum': '10'
+            }
+            
+            self._random_delay()
+            response = requests.post(url, headers=headers, data=data, timeout=30)
+            
+            if response.status_code == 200:
+                result = response.json()
+                # API直接返回列表
+                if isinstance(result, list) and len(result) > 0:
+                    first_item = result[0]
+                    if isinstance(first_item, dict):
+                        code = first_item.get('code', '')
+                        name = first_item.get('zwjc') or code
+                        org_id = first_item.get('orgId', '')
+                        
+                        # 根据org_id判断plate
+                        if org_id.startswith('gssh') or org_id.startswith('6'):
+                            plate = 'sse'
+                        else:
+                            plate = 'szse'
+                        
+                        return {
+                            'code': code,
+                            'name': name,
+                            'org_id': org_id,
+                            'plate': plate
+                        }
+                # 兼容旧格式（字典包装）
+                elif isinstance(result, dict) and result.get('code') == 0:
+                    data_list = result.get('data', [])
+                    if isinstance(data_list, list) and len(data_list) > 0:
+                        first_item = data_list[0]
+                        if isinstance(first_item, dict):
+                            code = first_item.get('code', '')
+                            name = first_item.get('zwjc') or first_item.get('stockName') or code
+                            org_id = first_item.get('orgId', '')
+                            plate = first_item.get('plate', 'szse')
+                            
+                            return {
+                                'code': code,
+                                'name': name,
+                                'org_id': org_id,
+                                'plate': plate
+                            }
+            
+            return None
+        except Exception as e:
+            print(f"获取股票信息出错: {e}")
+            return None
+    
+    def _search_stock_by_name(self, stock_name):
+        """
+        通过股票名称搜索股票信息
+        
+        Args:
+            stock_name: 股票名称
+            
+        Returns:
+            股票信息字典，未找到返回None
+        """
+        try:
+            url = "http://www.cninfo.com.cn/new/information/topSearch/query"
+            
+            headers = {
+                'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
+                'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8',
+                'X-Requested-With': 'XMLHttpRequest'
+            }
+            
+            data = {
+                'keyWord': stock_name,
+                'maxNum': '10'
+            }
+            
+            self._random_delay()
+            response = requests.post(url, headers=headers, data=data, timeout=30)
+            
+            if response.status_code == 200:
+                result = response.json()
+                # API直接返回列表
+                if isinstance(result, list) and len(result) > 0:
+                    # 查找匹配的股票
+                    for item in result:
+                        if isinstance(item, dict):
+                            item_name = item.get('zwjc', '')
+                            # 精确匹配或包含关系
+                            if stock_name in item_name or item_name in stock_name:
+                                code = item.get('code', '')
+                                org_id = item.get('orgId', '')
+                                
+                                # 根据org_id判断plate
+                                if org_id.startswith('gssh') or org_id.startswith('6'):
+                                    plate = 'sse'
+                                else:
+                                    plate = 'szse'
+                                
+                                return {
+                                    'code': code,
+                                    'name': item_name,
+                                    'org_id': org_id,
+                                    'plate': plate
+                                }
+                # 兼容旧格式（字典包装）
+                elif isinstance(result, dict) and result.get('code') == 0:
+                    data_list = result.get('data', [])
+                    if isinstance(data_list, list) and len(data_list) > 0:
+                        for item in data_list:
+                            if isinstance(item, dict):
+                                item_name = item.get('zwjc') or item.get('stockName', '')
+                                if stock_name in item_name or item_name in stock_name:
+                                    code = item.get('code', '')
+                                    org_id = item.get('orgId', '')
+                                    plate = item.get('plate', 'szse')
+                                    
+                                    return {
+                                        'code': code,
+                                        'name': item_name,
+                                        'org_id': org_id,
+                                        'plate': plate
+                                    }
+            
+            return None
+        except Exception as e:
+            print(f"通过名称搜索股票出错: {e}")
+            return None
+    
+    def get_announcements(self, stock_info,
                           announcement_type="latest",
                           start_date=None,
                           end_date=None,
-                          max_count=10):
+                          max_count=None):
         """
         获取股票公告列表
-        
+
         Args:
             stock_info: 股票信息对象
             announcement_type: 公告类型 (latest: 最新公告, periodic: 定期报告, research: 调研)
             start_date: 开始日期 (YYYY-MM-DD)
             end_date: 结束日期 (YYYY-MM-DD)
-            max_count: 每种类型最多获取的公告数量
-            
+            max_count: 最多获取的公告数量，None表示不限制
+
         Returns:
             公告信息列表
         """
         announcements = []
-        
+
         try:
             # 构建查询参数
             if not end_date:
@@ -225,7 +423,7 @@ class StockDownloader:
                     start_date = (datetime.now() - timedelta(days=3650)).strftime("%Y-%m-%d")
                 else:
                     start_date = (datetime.now() - timedelta(days=365)).strftime("%Y-%m-%d")
-            
+
             # 公告类型对应的category
             category_map = {
                 "latest": "",
@@ -233,19 +431,17 @@ class StockDownloader:
                 "research": ""
             }
             category = category_map.get(announcement_type, "")
-            
+
             # 根据板块确定column参数
             column = "szse" if stock_info.plate == "szse" else "sse"
-            
-            # 确定要获取的页数
-            max_pages = 1
-            if announcement_type == "research":
-                max_pages = 100  # 调研类型获取更多页（100页）
-            
+
+            # 获取所有页面，直到没有更多数据
+            max_pages = 100  # 最多获取100页
+
             url = "https://www.cninfo.com.cn/new/hisAnnouncement/query"
-            
-            print(f"正在请求公告列表，股票: {stock_info.name}({stock_info.code}), 类型: {announcement_type}")
-            
+
+            print(f"正在请求公告列表，股票: {stock_info.name}({stock_info.code}), 类型: {announcement_type}, 时间范围: {start_date} ~ {end_date}")
+
             # 调研类型使用特殊的方法：搜索所有股票的调研公告，然后过滤
             if announcement_type == "research":
                 return self._get_research_announcements(stock_info, start_date, end_date, max_pages, max_count)
@@ -292,10 +488,14 @@ class StockDownloader:
                 if result.get("announcements"):
                     page_announcements = result["announcements"]
                     print(f"第 {page_num} 页获取到 {len(page_announcements)} 条公告")
-                    
+
+                    # 如果本页没有数据，说明已经获取完毕
+                    if len(page_announcements) == 0:
+                        break
+
                     for item in page_announcements:
-                        # 检查是否已经达到最大数量
-                        if len(announcements) >= max_count:
+                        # 检查是否已经达到最大数量（如果设置了限制）
+                        if max_count is not None and len(announcements) >= max_count:
                             break
                         
                         announcement_id = str(item.get("announcementId", ""))
@@ -327,11 +527,14 @@ class StockDownloader:
                                 break
                         
                         # 根据用户选择的类型过滤
+                        # 注意：巨潮资讯网的"最新公告"包含所有类型，不应过滤
                         should_include = True
                         if announcement_type == "periodic":
+                            # 定期报告：只保留定期报告类型
                             should_include = is_periodic
                         elif announcement_type == "latest":
-                            should_include = not (is_periodic or is_research)
+                            # 最新公告：包含所有类型，不过滤
+                            should_include = True
                         
                         if not should_include:
                             continue
@@ -366,8 +569,8 @@ class StockDownloader:
                         )
                         announcements.append(announcement_info)
                     
-                    # 检查是否已经达到最大数量
-                    if len(announcements) >= max_count:
+                    # 检查是否已经达到最大数量（如果设置了限制）
+                    if max_count is not None and len(announcements) >= max_count:
                         break
                     
                     # 如果本页数据少于30条，说明已经是最后一页
@@ -376,8 +579,9 @@ class StockDownloader:
                 else:
                     break
             
-            # 确保不超过最大数量
-            announcements = announcements[:max_count]
+            # 确保不超过最大数量（如果设置了限制）
+            if max_count is not None:
+                announcements = announcements[:max_count]
             print(f"总共获取到 {len(announcements)} 条公告")
             return announcements
             

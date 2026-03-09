@@ -33,3 +33,24 @@ MAX_DELAY = 10
 # 股票代码与名称映射文件路径
 STOCK_MAP_FILE = os.path.join(PROJECT_ROOT, "stock_map.json")
 
+# ==================== Ollama AI配置 ====================
+# Ollama服务地址（默认本地11434端口）
+OLLAMA_HOST = os.getenv("OLLAMA_HOST", "http://localhost:11434")
+
+# 默认使用的模型名称
+# 可选模型：qwen2.5:7b, qwen3:8b, deepseek-r1:7b 等
+# 使用 `ollama list` 命令查看本地可用模型
+OLLAMA_MODEL = os.getenv("OLLAMA_MODEL", "qwen2.5:7b")
+
+# 模型参数配置
+OLLAMA_TEMPERATURE = float(os.getenv("OLLAMA_TEMPERATURE", "0.3"))  # 创造性程度，0-1之间
+OLLAMA_MAX_TOKENS = int(os.getenv("OLLAMA_MAX_TOKENS", "4096"))     # 最大输出token数
+OLLAMA_TIMEOUT = int(os.getenv("OLLAMA_TIMEOUT", "300"))              # 请求超时时间（秒）
+
+# 向量数据库配置
+VECTOR_STORE_DIR = os.path.join(PROJECT_ROOT, "vector_store")
+
+# 文档解析配置
+MAX_DOCUMENT_LENGTH = 15000  # 单次分析最大字符数
+SUPPORTED_DOC_TYPES = [".pdf", ".docx", ".txt"]  # 支持的文档类型
+
