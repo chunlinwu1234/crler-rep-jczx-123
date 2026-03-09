@@ -31,3 +31,6 @@ matplotlib>=3.7.0
 
 # 其他
 python-dotenv>=1.0.0
+
+# 语言检测
+langdetect>=1.0.9
