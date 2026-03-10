@@ -12,6 +12,7 @@ from stock_downloader import StockDownloader
 from ai_analyzer import AIAnalyzer, ModelConfig, PromptConfig
 from database import DatabaseManager, DataRepository, DBConfig
 from data_extractor import DataExtractor, DataQueryHelper, create_extractor_with_config
+from data_module_ui import render_data_module
 import threading
 import json
 import zipfile
@@ -560,7 +561,13 @@ def main():
         - 多文件批量分析
         - 结构化报告输出
         
-        📊 **分析维度**
+        📊 **数据管理**
+        - MySQL/Excel数据导入
+        - AI自动提取财务数据
+        - 多市场数据支持(A股/港股/美股等)
+        - 数据查询与可视化分析
+        
+        📈 **分析维度**
         - 战略分析、商业模式
         - 资源能力、财务分析
         - 前景分析、发展历程
@@ -571,7 +578,7 @@ def main():
         st.caption("© 2024 CIMS - 竞争情报监控系统")
     
     # 主内容区
-    tab1, tab2, tab3, tab4 = st.tabs(["🔍 搜索下载", "📜 历史记录", "⏰ 定时任务", "🤖 AI分析"])
+    tab1, tab2, tab3, tab4, tab5 = st.tabs(["🔍 搜索下载", "📜 历史记录", "⏰ 定时任务", "🤖 AI分析", "📊 数据管理"])
     
     with tab1:
         st.header("🔍 搜索下载")
@@ -647,14 +654,13 @@ def main():
             # 验证日期范围
             if start_date and end_date and start_date > end_date:
                 st.error("开始日期不能晚于结束日期")
-                return
-            
-            announcement_type = st.selectbox(
-                "公告类型",
-                ["latest", "periodic"],
-                format_func=lambda x: {
-                    "latest": "最新公告",
-                    "periodic": "定期报告"
+            else:
+                announcement_type = st.selectbox(
+                    "公告类型",
+                    ["latest", "periodic"],
+                    format_func=lambda x: {
+                        "latest": "最新公告",
+                        "periodic": "定期报告"
                 }.get(x, x)
             )
             
@@ -939,22 +945,20 @@ def main():
         # 检查分析器是否已初始化
         if st.session_state.analyzer is None:
             st.warning("⚠️ 请先配置AI模型并点击'保存配置并初始化'")
-            return
-
-        # 分析维度选择（多选）
-        st.markdown("**分析维度**（可多选）")
-        
-        # 使用columns布局使多选更紧凑
-        cols = st.columns(4)
-        selected_dimensions = []
-        for i, dim in enumerate(available_dimensions):
-            with cols[i % 4]:
-                if st.checkbox(dim, value=(dim == "战略分析"), key=f"dim_{dim}"):
-                    selected_dimensions.append(dim)
-        
-        if not selected_dimensions:
-            st.warning("请至少选择一个分析维度")
-            return
+        else:
+            # 分析维度选择（多选）
+            st.markdown("**分析维度**（可多选）")
+            
+            # 使用columns布局使多选更紧凑
+            cols = st.columns(4)
+            selected_dimensions = []
+            for i, dim in enumerate(available_dimensions):
+                with cols[i % 4]:
+                    if st.checkbox(dim, value=(dim == "战略分析"), key=f"dim_{dim}"):
+                        selected_dimensions.append(dim)
+            
+            if not selected_dimensions:
+                st.warning("请至少选择一个分析维度")
         
         # 分析深度选择
         analysis_depth = st.selectbox(
@@ -1020,13 +1024,12 @@ def main():
         
         if not company_name:
             st.warning("⚠️ 请输入公司名称，用于生成分析报告标题")
-            return
-        
-        # 分析按钮
-        st.markdown("---")
-        # 数据提取选项
-        st.markdown("---")
-        st.subheader("📊 数据提取与存储")
+        else:
+            # 分析按钮
+            st.markdown("---")
+            # 数据提取选项
+            st.markdown("---")
+            st.subheader("📊 数据提取与存储")
         extract_data = st.checkbox("🔍 自动提取结构化数据并保存到数据库", value=True,
                                    help="分析时自动提取财务、业务等结构化数据并保存到MySQL数据库，便于后续查询和对比分析")
 
@@ -1301,6 +1304,12 @@ def main():
                             st.dataframe(df, use_container_width=True)
                     else:
                         st.info("💡 数据库中暂无该公司的财务数据，请先进行分析以提取数据")
+
+    with tab5:
+        # 数据管理模块
+        st.write("DEBUG: tab5 开始渲染")
+        render_data_module()
+        st.write("DEBUG: tab5 渲染完成")
 
 
 if __name__ == "__main__":

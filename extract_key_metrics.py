@@ -72,11 +72,11 @@ key_metrics_rules = {
             'ts_code', 'end_date', 'ann_date',
             'eps', 'dt_eps', 'total_revenue_ps', 'revenue_ps', 'capital_rese_ps',  # 每股指标
             'profit_dedt', 'grossprofit_margin', 'netprofit_margin',  # 盈利能力
-            'roe', 'roa',  # 回报率
+            'roe', 'roe_waa', 'roe_dt', 'roa',  # 回报率
             'debt_to_assets', 'debt_to_eqt', 'current_ratio', 'quick_ratio',  # 偿债能力
             'turn_days', 'inv_turn', 'ar_turn', 'ca_turn', 'fa_turn', 'ta_turn',  # 营运能力
             'ocfps', 'cfps', 'free_cash_flow',  # 现金流指标
-            'q_sales_yoy', 'q_op_yoy', 'q_profit_yoy',  # 成长能力
+            'profit_to_op', 'q_sales_yoy', 'q_op_yoy', 'q_profit_yoy',  # 成长能力
         ],
         '竞争情报重要': [
             'basic_eps_yoy', 'dt_eps_yoy', 'cfps_yoy', 'op_yoy', 'ebt_yoy', 'netprofit_yoy',  # 同比增长
