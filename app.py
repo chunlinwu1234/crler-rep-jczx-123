@@ -839,12 +839,12 @@ def main():
 
             db_col1, db_col2 = st.columns(2)
             with db_col1:
-                db_host = st.text_input("主机地址", value=st.session_state.db_config['host'])
-                db_port = st.number_input("端口号", value=st.session_state.db_config['port'], min_value=1, max_value=65535)
-                db_database = st.text_input("数据库名", value=st.session_state.db_config['database'])
+                db_host = st.text_input("主机地址", value=st.session_state.db_config['host'], key="ai_db_host")
+                db_port = st.number_input("端口号", value=st.session_state.db_config['port'], min_value=1, max_value=65535, key="ai_db_port")
+                db_database = st.text_input("数据库名", value=st.session_state.db_config['database'], key="ai_db_database")
             with db_col2:
-                db_user = st.text_input("用户名", value=st.session_state.db_config['user'])
-                db_password = st.text_input("密码", value=st.session_state.db_config['password'], type="password")
+                db_user = st.text_input("用户名", value=st.session_state.db_config['user'], key="ai_db_user")
+                db_password = st.text_input("密码", value=st.session_state.db_config['password'], type="password", key="ai_db_password")
 
             db_cols = st.columns(3)
             with db_cols[0]:
@@ -1307,9 +1307,7 @@ def main():
 
     with tab5:
         # 数据管理模块
-        st.write("DEBUG: tab5 开始渲染")
         render_data_module()
-        st.write("DEBUG: tab5 渲染完成")
 
 
 if __name__ == "__main__":
